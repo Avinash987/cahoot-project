@@ -39,23 +39,28 @@ public class SearchService : ISearchService
         }
 
         const string sql = """
-        DECLARE @SearchPrefix NVARCHAR(110) = @Query + '%';
+        SELECT TOP (200)
+            q.Id,
+            q.Title,
+            q.Body,
+            q.OwnerUserId,
+            q.CreationDate
+        INTO #CandidateQuestions
+        FROM dbo.Posts q
+        WHERE q.PostTypeId = 1
+        AND q.Title LIKE @SearchPrefix
+        ORDER BY q.CreationDate DESC
+        OPTION (RECOMPILE);
 
-        WITH CandidateQuestions AS (
-            SELECT TOP (200)
-                q.Id,
-                q.Title,
-                q.Body,
-                q.OwnerUserId,
-                q.CreationDate
-            FROM dbo.Posts q
-            WHERE q.PostTypeId = 1
-            AND q.Title LIKE @SearchPrefix
-            ORDER BY q.CreationDate DESC
-        ),
-        CandidateOwners AS (
+        CREATE CLUSTERED INDEX IX_CandidateQuestions_Id
+        ON #CandidateQuestions (Id);
+
+        CREATE NONCLUSTERED INDEX IX_CandidateQuestions_OwnerUserId
+        ON #CandidateQuestions (OwnerUserId);
+
+        WITH CandidateOwners AS (
             SELECT DISTINCT OwnerUserId AS UserId
-            FROM CandidateQuestions
+            FROM #CandidateQuestions
             WHERE OwnerUserId IS NOT NULL
         ),
         AnswerCounts AS (
@@ -63,12 +68,9 @@ public class SearchService : ISearchService
                 p.ParentId AS QuestionId,
                 COUNT(*) AS TotalAnswers
             FROM dbo.Posts p
+            INNER JOIN #CandidateQuestions cq
+                ON cq.Id = p.ParentId
             WHERE p.PostTypeId = 2
-            AND EXISTS (
-                SELECT 1
-                FROM CandidateQuestions cq
-                WHERE cq.Id = p.ParentId
-            )
             GROUP BY p.ParentId
         ),
         VoteTotals AS (
@@ -77,12 +79,9 @@ public class SearchService : ISearchService
                 SUM(CASE WHEN v.VoteTypeId = 2 THEN 1 ELSE 0 END) AS Upvotes,
                 SUM(CASE WHEN v.VoteTypeId = 3 THEN 1 ELSE 0 END) AS Downvotes
             FROM dbo.Votes v
+            INNER JOIN #CandidateQuestions cq
+                ON cq.Id = v.PostId
             WHERE v.VoteTypeId IN (2, 3)
-            AND EXISTS (
-                SELECT 1
-                FROM CandidateQuestions cq
-                WHERE cq.Id = v.PostId
-            )
             GROUP BY v.PostId
         ),
         BadgeCounts AS (
@@ -106,7 +105,7 @@ public class SearchService : ISearchService
             ISNULL(u.DisplayName, 'Unknown User') AS AskedBy,
             u.Reputation,
             ISNULL(bc.TotalBadges, 0) AS TotalBadges
-        FROM CandidateQuestions cq
+        FROM #CandidateQuestions cq
         LEFT JOIN dbo.Users u
             ON u.Id = cq.OwnerUserId
         LEFT JOIN AnswerCounts ac
@@ -128,7 +127,7 @@ public class SearchService : ISearchService
             sql,
             new
             {
-                Query = query,
+                SearchPrefix = query + "%",
                 Offset = offset,
                 PageSize = pageSize
             },

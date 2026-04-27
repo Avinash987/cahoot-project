@@ -9,10 +9,15 @@
 
 ## Local Setup
 
-1. Start SQL Server Docker container
-2. Ensure StackOverflow2013 database is attached
-3. Update appsettings.Development.json with SQL connection string
-4. Run the app with `dotnet run`
+1. Start SQL Server locally or in Docker on port 1433.
+2. Attach or restore the `StackOverflow2013` database.
+3. Update `src/StackOverflowSearchWeb/appsettings.json` or user secrets with the `StackOverflowDb` connection string.
+4. Apply the supporting indexes by running the SQL scripts in `sql/`.
+5. Run the app:
+
+```bash
+dotnet run --project src/StackOverflowSearchWeb/StackOverflowSearchWeb.csproj
+```
 
 ## Search Behavior
 
@@ -27,6 +32,11 @@
 - sql/01-task-2.sql
 - sql/02-task-3.sql
 - sql/03-search-query.sql
+
+## Documentation
+
+- docs/run-instructions.md
+- docs/methodology.md
 
 ## Assumptions
 
