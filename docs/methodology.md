@@ -6,11 +6,13 @@ I built the search app as an ASP.NET Core MVC application using Dapper for SQL a
 
 Each result shows the question title, a cleaned 140-character preview, net vote score, answer count, asking user, reputation, and badge count. I used a badge count instead of concatenating badge names because it is compact, fast to calculate, and fits better in a search result row.
 
-My first search approach used broad text matching, but that was too slow on the local StackOverflow database because SQL Server Full-Text Search was not installed in this environment. I changed the search to a practical indexed fallback: collect a bounded candidate set first, materialize it into a temp table, index that temp table, and only then join to answers, votes, users, and badges. That kept the UI responsive while still using the real database.
+My first search approach used broad text matching, but that was too slow on the local StackOverflow database because SQL Server Full-Text Search was not installed in this environment. I changed the search to a practical indexed fallback: collect bounded question candidates from title and tag matches, add answer rows under those matching questions, and only enrich the current page with votes, answer counts, users, and badges. That kept the UI responsive while still using the real database.
 
-I added supporting indexes for the search access path: question title lookup, answer lookup by parent question, vote lookup by post and vote type, and badge lookup by user. The main tradeoff is that this local version favors fast, explainable search behavior over full semantic title/body search.
+I added supporting indexes for the search access path: question title lookup, tag lookup, answer lookup by parent question, vote lookup by post and vote type, and badge lookup by user. The main tradeoff is that this local version favors fast, explainable search behavior over full semantic title/body search.
 
-I also added a browser notification tied to progressive loading. When the browser allows notifications, the app can notify the user after more results are loaded. This is a lightweight client-side notification rather than a server push system.
+I also added a browser notification tied to progressive loading. When the browser allows notifications, the app can notify the user after more results are loaded. I added an explicit button for requesting notification permission and a visible fallback alert when notifications are unsupported or blocked.
+
+For the Credential Management API extra-credit item, I added a small browser-side demo that can remember a display name using `PasswordCredential` where the browser supports it. This is intentionally not a full login system or real cross-device authentication.
 
 ## Task 2 - Day-of-Week Vote Ratio Query
 
@@ -41,4 +43,4 @@ My assumptions for this task were:
 - Accepted answers are counted by the accepted answer post's creation week.
 - Active users are distinct users who either posted or voted in that week.
 - The first date of the week is calculated with SQL Server's `DATEADD(WEEK, DATEDIFF(WEEK, 0, date), 0)` expression.
-- The optional Credential Management API requirement is treated as a small browser API demo, not a full authentication system.
+- The Credential Management API work is a small browser API demo, not a full authentication system.

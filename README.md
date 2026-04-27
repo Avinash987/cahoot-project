@@ -21,11 +21,12 @@ dotnet run --project src/StackOverflowSearchWeb/StackOverflowSearchWeb.csproj
 
 ## Search Behavior
 
-- Question-only search
-- Title-prefix matching
+- Question-centric search with answer-derived results
+- Title-prefix and first-tag matching
 - 10 results per page
 - Progressive loading via Load More
-- Browser notification after loading more results
+- Browser notification controls with fallback alerts
+- Minimal browser Credential Management API demo
 
 ## SQL Deliverables
 
@@ -47,4 +48,4 @@ dotnet run --project src/StackOverflowSearchWeb/StackOverflowSearchWeb.csproj
 
 ## Limitation
 
-Full-Text Search was not available in the local SQL Server environment, so the app uses an indexed title-prefix search fallback instead of full-text title/body search.
+Full-Text Search was not available in the local SQL Server environment, so the app uses indexed title/tag search plus answer-derived results instead of full text title/body search.

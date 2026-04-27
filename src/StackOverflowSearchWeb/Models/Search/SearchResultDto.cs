@@ -6,7 +6,10 @@ namespace StackOverflowSearchWeb.Models.Search;
 public class SearchResultDto
 {
     public int QuestionId { get; set; }
+    public int SourcePostId { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string ResultType { get; set; } = "Question";
+    public string MatchReason { get; set; } = string.Empty;
 
     // raw DB value
     public string Snippet { get; set; } = string.Empty;

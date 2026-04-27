@@ -11,13 +11,29 @@
         <div class="row g-2">
             <div class="col-md-10">
                 <input type="text" name="q" value="@Model.Query" class="form-control"
-                       placeholder="Search questions by title..." />
+                       placeholder="Search questions by title or tag..." />
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">Search</button>
             </div>
         </div>
     </form>
+
+    <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
+        <div>
+            <label for="display-name-input" class="form-label small text-muted mb-1">Display name</label>
+            <input id="display-name-input" type="text" class="form-control form-control-sm" autocomplete="name"
+                   placeholder="Your name" />
+        </div>
+        <button id="remember-name-btn" type="button" class="btn btn-sm btn-outline-secondary">
+            Remember
+        </button>
+        <button id="enable-notifications-btn" type="button" class="btn btn-sm btn-outline-secondary">
+            Enable notifications
+        </button>
+    </div>
+
+    <div id="browser-feature-alert" class="alert d-none mt-3" role="alert"></div>
 
     @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.Query.Trim().Length < 2)
     {
@@ -57,56 +73,140 @@
 @section Scripts {
     <script>
         (() => {
-            const button = document.getElementById("load-more-btn");
-            if (!button) return;
+            const loadMoreButton = document.getElementById("load-more-btn");
+            const notificationButton = document.getElementById("enable-notifications-btn");
+            const alertBox = document.getElementById("browser-feature-alert");
+            const displayNameInput = document.getElementById("display-name-input");
+            const rememberNameButton = document.getElementById("remember-name-btn");
+
+            function showFeatureAlert(message, type = "info") {
+                if (!alertBox) return;
+
+                alertBox.className = `alert alert-${type} mt-3`;
+                alertBox.textContent = message;
+            }
 
             async function ensureNotificationPermission() {
-                if (!("Notification" in window)) return false;
+                if (!("Notification" in window)) {
+                    showFeatureAlert("This browser does not support notifications.", "warning");
+                    return false;
+                }
 
                 if (Notification.permission === "granted") {
                     return true;
                 }
 
                 if (Notification.permission === "denied") {
+                    showFeatureAlert("Notifications are blocked for this site.", "warning");
                     return false;
                 }
 
                 const permission = await Notification.requestPermission();
+                if (permission !== "granted") {
+                    showFeatureAlert("Notifications were not enabled.", "warning");
+                }
+
                 return permission === "granted";
             }
 
-            button.addEventListener("click", async () => {
-                const query = button.dataset.query;
-                const nextPage = parseInt(button.dataset.nextPage, 10);
+            notificationButton?.addEventListener("click", async () => {
+                const canNotify = await ensureNotificationPermission();
+                if (!canNotify) return;
 
-                button.disabled = true;
-                const originalText = button.innerText;
-                button.innerText = "Loading...";
+                showFeatureAlert("Notifications are enabled.", "success");
+                new Notification("Stack Overflow Search notifications are enabled.");
+            });
+
+            async function restoreCredentialDemo() {
+                if (!("credentials" in navigator) || typeof window.PasswordCredential === "undefined") {
+                    return;
+                }
+
+                try {
+                    const credential = await navigator.credentials.get({
+                        password: true,
+                        mediation: "optional"
+                    });
+
+                    if (credential && displayNameInput) {
+                        displayNameInput.value = credential.name || credential.id || "";
+                    }
+                } catch (error) {
+                    console.debug("Credential restore skipped.", error);
+                }
+            }
+
+            rememberNameButton?.addEventListener("click", async () => {
+                const displayName = displayNameInput?.value.trim();
+                if (!displayName) {
+                    showFeatureAlert("Enter a display name before saving it.", "warning");
+                    return;
+                }
+
+                if (!("credentials" in navigator) || typeof window.PasswordCredential === "undefined") {
+                    localStorage.setItem("stackSearchDisplayName", displayName);
+                    showFeatureAlert("Display name saved locally. Credential Management API is not available in this browser.", "info");
+                    return;
+                }
+
+                try {
+                    const credential = new PasswordCredential({
+                        id: displayName,
+                        name: displayName,
+                        password: "local-demo-only"
+                    });
+
+                    await navigator.credentials.store(credential);
+                    showFeatureAlert("Display name saved with the browser Credential Management API.", "success");
+                } catch (error) {
+                    localStorage.setItem("stackSearchDisplayName", displayName);
+                    showFeatureAlert("Display name saved locally. Credential storage was not available.", "info");
+                    console.debug("Credential store skipped.", error);
+                }
+            });
+
+            if (displayNameInput && localStorage.getItem("stackSearchDisplayName")) {
+                displayNameInput.value = localStorage.getItem("stackSearchDisplayName");
+            }
+
+            restoreCredentialDemo();
+
+            if (!loadMoreButton) return;
+
+            loadMoreButton.addEventListener("click", async () => {
+                const query = loadMoreButton.dataset.query;
+                const nextPage = parseInt(loadMoreButton.dataset.nextPage, 10);
+
+                loadMoreButton.disabled = true;
+                const originalText = loadMoreButton.innerText;
+                loadMoreButton.innerText = "Loading...";
 
                 try {
                     const response = await fetch(`/Search/More?q=${encodeURIComponent(query)}&page=${nextPage}`);
                     const html = await response.text();
 
                     if (!html.trim()) {
-                        button.remove();
+                        loadMoreButton.remove();
                         return;
                     }
 
                     const container = document.getElementById("search-results");
                     container.insertAdjacentHTML("beforeend", html);
 
-                    button.dataset.nextPage = (nextPage + 1).toString();
-                    button.disabled = false;
-                    button.innerText = originalText;
+                    loadMoreButton.dataset.nextPage = (nextPage + 1).toString();
+                    loadMoreButton.disabled = false;
+                    loadMoreButton.innerText = originalText;
 
-                    const canNotify = await ensureNotificationPermission();
-                    if (canNotify) {
+                    if ("Notification" in window && Notification.permission === "granted") {
                         new Notification(`Loaded 10 more results for "${query}"`);
+                    } else {
+                        showFeatureAlert(`Loaded more results for "${query}".`, "success");
                     }
                 } catch (error) {
                     console.error(error);
-                    button.disabled = false;
-                    button.innerText = "Load More";
+                    loadMoreButton.disabled = false;
+                    loadMoreButton.innerText = "Load More";
+                    showFeatureAlert("Could not load more results. Please try again.", "danger");
                 }
             });
         })();

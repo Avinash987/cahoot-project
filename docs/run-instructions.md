@@ -45,4 +45,4 @@ Try searches such as:
 - `java 8`
 - `controllers`
 
-The page returns 10 results at a time. Use `Load More` for progressive loading. If the browser grants notification permission, the app sends a notification after loading an additional page of results.
+The page returns 10 results at a time. Use `Load More` for progressive loading. Use `Enable notifications` to grant browser notification permission before testing the notification. Use the display-name field and `Remember` button to test the browser Credential Management API demo; unsupported browsers fall back to local browser storage.
