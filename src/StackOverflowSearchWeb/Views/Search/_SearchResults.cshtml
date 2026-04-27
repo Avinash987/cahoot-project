@@ -1,0 +1,29 @@
+@model List<StackOverflowSearchWeb.Models.Search.SearchResultDto>
+
+@if (Model.Any())
+{
+    <div class="list-group">
+        @foreach (var item in Model)
+        {
+            <div class="list-group-item mb-3 rounded shadow-sm">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="mb-1">
+                        <a href="#" class="text-decoration-none">@item.Title</a>
+                    </h5>
+                    <span class="badge bg-secondary ms-3">Votes: @item.TotalVotes</span>
+                </div>
+
+                <p class="mb-2 text-muted">
+                    @item.Snippet...
+                </p>
+
+                <div class="small text-secondary d-flex flex-wrap gap-3">
+                    <span><strong>Answers:</strong> @item.TotalAnswers</span>
+                    <span><strong>Asked by:</strong> @item.AskedBy</span>
+                    <span><strong>Reputation:</strong> @(item.Reputation ?? 0)</span>
+                    <span><strong>Badges:</strong> @item.TotalBadges</span>
+                </div>
+            </div>
+        }
+    </div>
+}

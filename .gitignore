@@ -1,0 +1,53 @@
+
+# OS
+
+.DS_Store
+
+# .NET build output
+
+bin/
+
+obj/
+
+# User-specific files
+
+*.user
+
+*.suo
+
+*.userosscache
+
+*.sln.docstates
+
+# VS Code
+
+.vscode/
+
+# Rider / JetBrains
+
+.idea/
+
+# Logs
+
+*.log
+
+# Secrets / local config overrides
+
+appsettings.Local.json
+
+appsettings.*.local.json
+
+# npm / frontend if added later
+
+node_modules/
+
+# Generated publish output
+
+publish/
+
+# Temporary files
+
+*.tmp
+
+*.temp
+
