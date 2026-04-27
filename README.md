@@ -1,10 +1,10 @@
-# Cahoot Developer Practical Test
+# Cahoot Developer Practical Assignment
 
 ## Tech Stack
 
 - ASP.NET Core MVC
 - SQL Server
-- Dapper
+- Dapper (for data access)
 - Docker (for local SQL Server on macOS)
 
 ## Local Setup
@@ -44,7 +44,3 @@ dotnet run --project src/StackOverflowSearchWeb/StackOverflowSearchWeb.csproj
 - VoteTypeId 2 = Upvote, 3 = Downvote
 - Active users = users who posted or voted in a week
 - Accepted answers counted by accepted answer creation week
-
-## Limitation
-
-Full-Text Search was not available in the local SQL Server environment, so the app uses indexed title/tag search plus answer-derived results instead of full text title/body search.
