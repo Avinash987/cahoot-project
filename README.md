@@ -26,7 +26,6 @@ dotnet run --project src/StackOverflowSearchWeb/StackOverflowSearchWeb.csproj
 - 10 results per page
 - Progressive loading via Load More
 - Browser notification controls with fallback alerts
-- Minimal browser Credential Management API demo
 
 ## SQL Deliverables
 

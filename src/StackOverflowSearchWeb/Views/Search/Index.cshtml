@@ -19,15 +19,7 @@
         </div>
     </form>
 
-    <div class="d-flex flex-wrap align-items-end gap-2 mb-3">
-        <div>
-            <label for="display-name-input" class="form-label small text-muted mb-1">Display name</label>
-            <input id="display-name-input" type="text" class="form-control form-control-sm" autocomplete="name"
-                   placeholder="Your name" />
-        </div>
-        <button id="remember-name-btn" type="button" class="btn btn-sm btn-outline-secondary">
-            Remember
-        </button>
+    <div class="mb-3">
         <button id="enable-notifications-btn" type="button" class="btn btn-sm btn-outline-secondary">
             Enable notifications
         </button>
@@ -76,8 +68,6 @@
             const loadMoreButton = document.getElementById("load-more-btn");
             const notificationButton = document.getElementById("enable-notifications-btn");
             const alertBox = document.getElementById("browser-feature-alert");
-            const displayNameInput = document.getElementById("display-name-input");
-            const rememberNameButton = document.getElementById("remember-name-btn");
 
             function showFeatureAlert(message, type = "info") {
                 if (!alertBox) return;
@@ -116,60 +106,6 @@
                 showFeatureAlert("Notifications are enabled.", "success");
                 new Notification("Stack Overflow Search notifications are enabled.");
             });
-
-            async function restoreCredentialDemo() {
-                if (!("credentials" in navigator) || typeof window.PasswordCredential === "undefined") {
-                    return;
-                }
-
-                try {
-                    const credential = await navigator.credentials.get({
-                        password: true,
-                        mediation: "optional"
-                    });
-
-                    if (credential && displayNameInput) {
-                        displayNameInput.value = credential.name || credential.id || "";
-                    }
-                } catch (error) {
-                    console.debug("Credential restore skipped.", error);
-                }
-            }
-
-            rememberNameButton?.addEventListener("click", async () => {
-                const displayName = displayNameInput?.value.trim();
-                if (!displayName) {
-                    showFeatureAlert("Enter a display name before saving it.", "warning");
-                    return;
-                }
-
-                if (!("credentials" in navigator) || typeof window.PasswordCredential === "undefined") {
-                    localStorage.setItem("stackSearchDisplayName", displayName);
-                    showFeatureAlert("Display name saved locally. Credential Management API is not available in this browser.", "info");
-                    return;
-                }
-
-                try {
-                    const credential = new PasswordCredential({
-                        id: displayName,
-                        name: displayName,
-                        password: "local-demo-only"
-                    });
-
-                    await navigator.credentials.store(credential);
-                    showFeatureAlert("Display name saved with the browser Credential Management API.", "success");
-                } catch (error) {
-                    localStorage.setItem("stackSearchDisplayName", displayName);
-                    showFeatureAlert("Display name saved locally. Credential storage was not available.", "info");
-                    console.debug("Credential store skipped.", error);
-                }
-            });
-
-            if (displayNameInput && localStorage.getItem("stackSearchDisplayName")) {
-                displayNameInput.value = localStorage.getItem("stackSearchDisplayName");
-            }
-
-            restoreCredentialDemo();
 
             if (!loadMoreButton) return;
 

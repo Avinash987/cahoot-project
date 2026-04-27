@@ -12,8 +12,6 @@ I added supporting indexes for the search access path: question title lookup, ta
 
 I also added a browser notification tied to progressive loading. When the browser allows notifications, the app can notify the user after more results are loaded. I added an explicit button for requesting notification permission and a visible fallback alert when notifications are unsupported or blocked.
 
-For the Credential Management API extra-credit item, I added a small browser-side demo that can remember a display name using `PasswordCredential` where the browser supports it. This is intentionally not a full login system or real cross-device authentication.
-
 ## Task 2 - Day-of-Week Vote Ratio Query
 
 For Task 2, I treated `PostTypeId = 1` as questions and `PostTypeId = 2` as answers. I grouped posts by the weekday of `Posts.CreationDate`, because the requirement asks for question and answer counts by day of the week.
@@ -43,4 +41,3 @@ My assumptions for this task were:
 - Accepted answers are counted by the accepted answer post's creation week.
 - Active users are distinct users who either posted or voted in that week.
 - The first date of the week is calculated with SQL Server's `DATEADD(WEEK, DATEDIFF(WEEK, 0, date), 0)` expression.
-- The Credential Management API work is a small browser API demo, not a full authentication system.
