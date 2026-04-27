@@ -11,20 +11,13 @@
         <div class="row g-2">
             <div class="col-md-10">
                 <input type="text" name="q" value="@Model.Query" class="form-control"
-                       placeholder="Search questions by title or body..." />
+                       placeholder="Search questions by title..." />
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">Search</button>
             </div>
         </div>
     </form>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Query))
-    {
-        <div class="mb-3 text-muted">
-            Showing results for: <strong>@Model.Query</strong>
-        </div>
-    }
 
     @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.Query.Trim().Length < 2)
     {
@@ -33,14 +26,89 @@
         </div>
     }
 
+    @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.Query.Trim().Length >= 2)
+    {
+        <div class="mb-3 text-muted">
+            Showing results for: <strong>@Model.Query</strong>
+        </div>
+    }
+
     <div id="search-results">
         @await Html.PartialAsync("_SearchResults", Model.Results)
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.Query) && !Model.Results.Any())
+    @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.Query.Trim().Length >= 2 && !Model.Results.Any())
     {
-        <div class="alert alert-warning mt-3">
+        <div class="alert alert-warning mt-3" id="no-results-message">
             No results found.
         </div>
     }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Query) && Model.HasMore)
+    {
+        <div class="mt-4 text-center">
+            <button id="load-more-btn" class="btn btn-outline-primary" data-query="@Model.Query" data-next-page="2">
+                Load More
+            </button>
+        </div>
+    }
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const button = document.getElementById("load-more-btn");
+            if (!button) return;
+
+            async function ensureNotificationPermission() {
+                if (!("Notification" in window)) return false;
+
+                if (Notification.permission === "granted") {
+                    return true;
+                }
+
+                if (Notification.permission === "denied") {
+                    return false;
+                }
+
+                const permission = await Notification.requestPermission();
+                return permission === "granted";
+            }
+
+            button.addEventListener("click", async () => {
+                const query = button.dataset.query;
+                const nextPage = parseInt(button.dataset.nextPage, 10);
+
+                button.disabled = true;
+                const originalText = button.innerText;
+                button.innerText = "Loading...";
+
+                try {
+                    const response = await fetch(`/Search/More?q=${encodeURIComponent(query)}&page=${nextPage}`);
+                    const html = await response.text();
+
+                    if (!html.trim()) {
+                        button.remove();
+                        return;
+                    }
+
+                    const container = document.getElementById("search-results");
+                    container.insertAdjacentHTML("beforeend", html);
+
+                    button.dataset.nextPage = (nextPage + 1).toString();
+                    button.disabled = false;
+                    button.innerText = originalText;
+
+                    const canNotify = await ensureNotificationPermission();
+                    if (canNotify) {
+                        new Notification(`Loaded 10 more results for "${query}"`);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    button.disabled = false;
+                    button.innerText = "Load More";
+                }
+            });
+        })();
+    </script>
+}

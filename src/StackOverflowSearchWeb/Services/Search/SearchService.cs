@@ -100,10 +100,7 @@ public class SearchService : ISearchService
         SELECT
             cq.Id AS QuestionId,
             cq.Title,
-            LEFT(
-                REPLACE(REPLACE(REPLACE(cq.Body, CHAR(13), ' '), CHAR(10), ' '), CHAR(9), ' '),
-                140
-            ) AS Snippet,
+            LEFT(cq.Body, 1000) AS Snippet,
             ISNULL(vt.Upvotes, 0) - ISNULL(vt.Downvotes, 0) AS TotalVotes,
             ISNULL(ac.TotalAnswers, 0) AS TotalAnswers,
             ISNULL(u.DisplayName, 'Unknown User') AS AskedBy,

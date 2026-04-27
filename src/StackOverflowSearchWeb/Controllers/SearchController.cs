@@ -24,12 +24,24 @@ public class SearchController : Controller
             PageSize = PageSize
         };
 
-        if (!string.IsNullOrWhiteSpace(q))
+        if (!string.IsNullOrWhiteSpace(q) && q.Trim().Length >= 2)
         {
             model.Results = await _searchService.SearchAsync(q, model.Page, model.PageSize, cancellationToken);
             model.HasMore = model.Results.Count == model.PageSize;
         }
 
         return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> More(string q, int page = 2, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        {
+            return Content(string.Empty);
+        }
+
+        var results = await _searchService.SearchAsync(q, Math.Max(1, page), PageSize, cancellationToken);
+        return PartialView("_SearchResults", results);
     }
 }
